@@ -1686,12 +1686,12 @@
     <script>
       (() => {
         const CONFIG = {
-          numBaubles: 55,
-          numBows: 20,
-          numLights: 220,
-          snowCount: 500,
+          numBaubles: 30, // Giảm từ 55 xuống 30
+          numBows: 10, // Giảm từ 20 xuống 10
+          numLights: 100, // Giảm từ 220 xuống 100
+          snowCount: 150, // Giảm từ 500 xuống 150 (giảm đáng kể lượng tuyết tính toán)
           buildSpeed: 1.8,
-          maxFps: 60, // FPS cap (0 = no cap, follows the screen's refresh rate)
+          maxFps: 30, // Giới hạn FPS ở mức 30 thay vì thả rỗng (giúp tiết kiệm pin và giảm lag rõ rệt trên mobile)
         };
 
         const BUILD_COLORS = [
