@@ -5714,27 +5714,7 @@
     >
       🔇
     </button>
-    <button
-      id="bgmNext"
-      aria-label="Next song"
-      style="
-        position: fixed;
-        right: 62px;
-        bottom: 14px;
-        z-index: 9999;
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
-        border: 0;
-        cursor: pointer;
-        background: rgba(0, 0, 0, 0.45);
-        color: #fff;
-        font-size: 18px;
-      "
-    >
-      ⏭
-    </button>
-    <script>
+    <scrip>
       (function () {
         const BGM_TRACKS = [
           "./audio/bgm.mp3",
@@ -5742,14 +5722,13 @@
           "./audio/bgm3.mp3",
         ];
         const a = document.getElementById("bgm"),
-          b = document.getElementById("bgmBtn"),
-          nx = document.getElementById("bgmNext");
+          b = document.getElementById("bgmBtn");
 
         a.volume = 0.5;
         let idx = 0,
           fails = 0,
-          want = true, // Mặc định là muốn phát nhạc
-          unlocked = false; // Trạng thái đã được trình duyệt cho phép phát chưa
+          want = true,
+          unlocked = false;
 
         const sync = () => {
           b.textContent = a.paused ? "🔇" : "🔊";
@@ -5758,7 +5737,7 @@
         function load(i) {
           idx = (i + BGM_TRACKS.length) % BGM_TRACKS.length;
           a.src = BGM_TRACKS[idx];
-          a.load(); // Ép trình duyệt nạp metadata ngay
+          a.load();
         }
 
         function tryPlay() {
@@ -5773,7 +5752,6 @@
                 cleanupUnlockEvents();
               })
               .catch(() => {
-                // Trình duyệt vẫn chặn -> giữ nguyên listener để chờ lần chạm hợp lệ tiếp theo
                 sync();
               });
           }
@@ -5793,7 +5771,6 @@
         a.addEventListener("play", sync);
         a.addEventListener("pause", sync);
 
-        // Nút bật/tắt nhạc thủ công
         b.onclick = (e) => {
           e.stopPropagation();
           if (a.paused) {
@@ -5806,19 +5783,10 @@
           sync();
         };
 
-        // Nút chuyển bài
-        nx.onclick = (e) => {
-          e.stopPropagation();
-          want = true;
-          next();
-        };
-
-        // Danh sách các tương tác hợp lệ trên mọi trình duyệt (kể cả iOS Safari)
         const EVTS = ["click", "touchend", "keydown", "mousedown"];
 
         function onFirstInteract(e) {
-          // Bỏ qua nếu người dùng bấm trực tiếp vào 2 nút điều khiển nhạc (đã có onclick riêng)
-          if (e.target === b || e.target === nx) return;
+          if (e.target === b) return;
           if (!unlocked && want) {
             tryPlay();
           }
@@ -5826,19 +5794,17 @@
 
         function cleanupUnlockEvents() {
           EVTS.forEach((evt) =>
-            window.removeEventListener(evt, onFirstInteract, { capture: true }),
+            window.removeEventListener(evt, onFirstInteract, { capture: true })
           );
         }
 
-        // Lắng nghe tương tác trên toàn trang (dùng capture: true để bắt được cả khi bấm vào canvas hay nút)
         EVTS.forEach((evt) =>
           window.addEventListener(evt, onFirstInteract, {
             capture: true,
             passive: true,
-          }),
+          })
         );
 
-        // Vẫn thử phát ngay khi tải trang (dành cho trình duyệt đã cấp quyền sẵn từ trước)
         tryPlay();
       })();
     </script>
