@@ -5736,7 +5736,6 @@
     </button>
     <script>
       (function () {
-        // Local music: put your mp3 files in ./audio/ and list them here.
         const BGM_TRACKS = [
           "./audio/bgm.mp3",
           "./audio/bgm2.mp3",
@@ -5745,68 +5744,102 @@
         const a = document.getElementById("bgm"),
           b = document.getElementById("bgmBtn"),
           nx = document.getElementById("bgmNext");
+
         a.volume = 0.5;
         let idx = 0,
           fails = 0,
-          want = false; // user wants music playing
-        const sync = () => (b.textContent = a.paused ? "🔇" : "🔊");
+          want = true, // Mặc định là muốn phát nhạc
+          unlocked = false; // Trạng thái đã được trình duyệt cho phép phát chưa
+
+        const sync = () => {
+          b.textContent = a.paused ? "🔇" : "🔊";
+        };
+
         function load(i) {
           idx = (i + BGM_TRACKS.length) % BGM_TRACKS.length;
           a.src = BGM_TRACKS[idx];
+          a.load(); // Ép trình duyệt nạp metadata ngay
         }
-        function play() {
-          want = true;
-          a.play()
-            .then(() => {
-              fails = 0;
-              sync();
-            })
-            .catch(() => {});
+
+        function tryPlay() {
+          if (!want) return;
+          const playPromise = a.play();
+          if (playPromise !== undefined) {
+            playPromise
+              .then(() => {
+                fails = 0;
+                unlocked = true;
+                sync();
+                cleanupUnlockEvents();
+              })
+              .catch(() => {
+                // Trình duyệt vẫn chặn -> giữ nguyên listener để chờ lần chạm hợp lệ tiếp theo
+                sync();
+              });
+          }
         }
+
         function next() {
           load(idx + 1);
-          if (want) play();
+          if (want) tryPlay();
         }
+
         load(0);
-        a.addEventListener("ended", next); // auto-advance (no loop on a playlist)
-        // missing file -> skip to the next one (stop if none can be loaded)
+
+        a.addEventListener("ended", next);
         a.addEventListener("error", () => {
           if (++fails < BGM_TRACKS.length) next();
         });
+        a.addEventListener("play", sync);
+        a.addEventListener("pause", sync);
+
+        // Nút bật/tắt nhạc thủ công
         b.onclick = (e) => {
           e.stopPropagation();
-          if (a.paused) play();
-          else {
+          if (a.paused) {
+            want = true;
+            tryPlay();
+          } else {
             want = false;
             a.pause();
           }
           sync();
         };
+
+        // Nút chuyển bài
         nx.onclick = (e) => {
           e.stopPropagation();
           want = true;
           next();
         };
-        a.addEventListener("play", sync);
-        a.addEventListener("pause", sync);
-        // Autoplay: try right away; if the browser blocks it, retry on the
-        // first user gesture (tap, click, key, touch) and then stop listening.
-        const EVTS = ["pointerdown", "touchend", "click", "keydown"];
-        const unlock = (e) => {
-          if (e && (e.target === b || e.target === nx)) return;
-          want = true;
-          a.play()
-            .then(() => {
-              fails = 0;
-              sync();
-              EVTS.forEach((t) => removeEventListener(t, unlock, true));
-            })
-            .catch(() => {});
-        };
-        EVTS.forEach((t) => addEventListener(t, unlock, true));
-        want = true;
-        play();
-        addEventListener("load", play);
+
+        // Danh sách các tương tác hợp lệ trên mọi trình duyệt (kể cả iOS Safari)
+        const EVTS = ["click", "touchend", "keydown", "mousedown"];
+
+        function onFirstInteract(e) {
+          // Bỏ qua nếu người dùng bấm trực tiếp vào 2 nút điều khiển nhạc (đã có onclick riêng)
+          if (e.target === b || e.target === nx) return;
+          if (!unlocked && want) {
+            tryPlay();
+          }
+        }
+
+        function cleanupUnlockEvents() {
+          EVTS.forEach((evt) =>
+            window.removeEventListener(evt, onFirstInteract, { capture: true }),
+          );
+        }
+
+        // Lắng nghe tương tác trên toàn trang (dùng capture: true để bắt được cả khi bấm vào canvas hay nút)
+        EVTS.forEach((evt) =>
+          window.addEventListener(evt, onFirstInteract, {
+            capture: true,
+            passive: true,
+          }),
+        );
+
+        // Vẫn thử phát ngay khi tải trang (dành cho trình duyệt đã cấp quyền sẵn từ trước)
+        tryPlay();
       })();
     </script>
   </body>
