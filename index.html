@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta
       name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
     />
     <title>Irene 隋憶*•’•€ · Wishes</title>
     <link rel="icon" type="image/png" href="./img/logo/rabbit.png" />
@@ -600,7 +600,15 @@
         display: block;
         width: 100vw;
         height: 100vh;
+        height: 100dvh;
         cursor: grab;
+        touch-action: none; /* tự xử lý kéo xoay + pinch zoom */
+      }
+      button,
+      input,
+      textarea,
+      .wx-ui {
+        touch-action: manipulation; /* tap nhận ngay, không chờ double-tap */
       }
       canvas:active {
         cursor: grabbing;
@@ -3224,30 +3232,59 @@
         };
         window.onmouseup = () => (isDragging = false);
 
-        window.ontouchstart = (e) => {
-          if (
-            !e.target.closest("#controlPanel, .wx-ui") &&
-            e.touches.length === 1
-          ) {
-            isDragging = true;
+        let pinchDist = 0;
+        const touchDist = (t) =>
+          Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY);
+        const setZoom = (z) => {
+          zoomScale = Math.max(0.4, Math.min(2.2, z));
+          zoomSlider.value = zoomScale;
+          zoomLabel.textContent = zoomScale.toFixed(1) + "x";
+        };
+        window.addEventListener(
+          "touchstart",
+          (e) => {
+            if (e.target.closest("#controlPanel, .wx-ui")) return;
+            if (e.touches.length === 1) {
+              isDragging = true;
+              lastX = e.touches[0].clientX;
+              lastY = e.touches[0].clientY;
+            } else if (e.touches.length === 2) {
+              isDragging = false;
+              pinchDist = touchDist(e.touches);
+            }
+          },
+          { passive: true },
+        );
+        window.addEventListener(
+          "touchmove",
+          (e) => {
+            if (e.target.closest("#controlPanel, .wx-ui")) return;
+            if (e.touches.length === 2 && pinchDist > 0) {
+              const d = touchDist(e.touches);
+              setZoom(zoomScale * (d / pinchDist));
+              pinchDist = d;
+              return;
+            }
+            if (!isDragging || e.touches.length !== 1) return;
+            mouseYawOffset += (e.touches[0].clientX - lastX) * 0.007;
+            mousePitchOffset = Math.max(
+              -0.26,
+              Math.min(
+                0.48,
+                mousePitchOffset - (e.touches[0].clientY - lastY) * 0.005,
+              ),
+            );
             lastX = e.touches[0].clientX;
             lastY = e.touches[0].clientY;
-          }
+          },
+          { passive: true },
+        );
+        const endTouch = (e) => {
+          isDragging = false;
+          if (e.touches.length < 2) pinchDist = 0;
         };
-        window.ontouchmove = (e) => {
-          if (!isDragging || e.touches.length !== 1) return;
-          mouseYawOffset += (e.touches[0].clientX - lastX) * 0.007;
-          mousePitchOffset = Math.max(
-            -0.26,
-            Math.min(
-              0.48,
-              mousePitchOffset - (e.touches[0].clientY - lastY) * 0.005,
-            ),
-          );
-          lastX = e.touches[0].clientX;
-          lastY = e.touches[0].clientY;
-        };
-        window.ontouchend = () => (isDragging = false);
+        window.addEventListener("touchend", endTouch, { passive: true });
+        window.addEventListener("touchcancel", endTouch, { passive: true });
 
         const easeOutBounce = (u) => {
           const n1 = 7.5625,
