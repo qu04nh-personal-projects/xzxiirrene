@@ -5714,7 +5714,7 @@
     >
       🔇
     </button>
-    <scrip>
+    <script>
       (function () {
         const BGM_TRACKS = [
           "./audio/bgm.mp3",
@@ -5794,7 +5794,7 @@
 
         function cleanupUnlockEvents() {
           EVTS.forEach((evt) =>
-            window.removeEventListener(evt, onFirstInteract, { capture: true })
+            window.removeEventListener(evt, onFirstInteract, { capture: true }),
           );
         }
 
@@ -5802,7 +5802,7 @@
           window.addEventListener(evt, onFirstInteract, {
             capture: true,
             passive: true,
-          })
+          }),
         );
 
         tryPlay();
