@@ -1125,6 +1125,7 @@
         font-size: 80px;
         line-height: 1;
         z-index: 2;
+        pointer-events: none;
       }
       .wx-dear {
         font-size: 24px;
@@ -3152,7 +3153,7 @@
           bloomCanvas.height = h * 0.5;
           bloomCtx.setTransform(0.5, 0, 0, 0.5, 0, 0);
 
-          const fontSize = w < 640 ? 3 : 4;
+          const fontSize = w < 640 ? 5 : 4;
           ctx.font = `500 ${fontSize}px "JetBrains Mono", monospace`;
           bloomCtx.font = `700 ${fontSize}px "JetBrains Mono", monospace`;
 
