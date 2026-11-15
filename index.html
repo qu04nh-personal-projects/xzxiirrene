@@ -1677,28 +1677,9 @@
         box-sizing: border-box;
         cursor: pointer;
       }
-      /* trong vườn (nền hồng sáng): chữ đỏ như nút Back */
+      /* trong vườn: ẩn nút nhạc (nhạc vẫn phát bình thường) */
       .wx-in-garden .wx-music {
-        color: #c8102e;
-        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
-        background: linear-gradient(
-          135deg,
-          rgba(255, 255, 255, 0.6),
-          rgba(255, 255, 255, 0.18)
-        );
-        box-shadow:
-          0 8px 24px rgba(200, 16, 46, 0.16),
-          inset 0 1px 0 rgba(255, 255, 255, 0.9),
-          inset 0 -1px 0 rgba(255, 255, 255, 0.25);
-      }
-      .wx-in-garden .wx-music.on {
-        color: #ffffff;
-        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
-        background: linear-gradient(
-          135deg,
-          rgba(200, 16, 46, 0.85),
-          rgba(200, 16, 46, 0.55)
-        );
+        display: none;
       }
 
       /* ===== Điện thoại: thanh nút phía trên luôn nằm 1 hàng ===== */
@@ -1812,7 +1793,7 @@
 
     <div class="wx-ui wx-corner">
       <a class="wx-btn" id="wxGarden" href="./type-garden-christmas-pink.html"
-        >🎄My Garden🌿</a
+        >🎀</a
       >
     </div>
     <iframe
@@ -6056,7 +6037,7 @@
       aria-checked="false"
       aria-label="Music"
     >
-      <span>🎵</span><span class="wx-sw"></span>
+      <span aria-hidden="true">🎵</span><span class="wx-sw"></span>
     </button>
     <script>
       (function () {
@@ -6078,6 +6059,28 @@
           const on = !a.paused;
           b.classList.toggle("on", on);
           b.setAttribute("aria-checked", String(on));
+        };
+
+        /* Trạng thái nhạc dùng chung với trang vườn chữ (localStorage) */
+        const KEY = "wx_bgm";
+        const readState = () => {
+          try {
+            return JSON.parse(localStorage.getItem(KEY)) || null;
+          } catch (e) {
+            return null;
+          }
+        };
+        let lastSave = 0;
+        const saveState = (force) => {
+          const now = Date.now();
+          if (!force && now - lastSave < 1000) return;
+          lastSave = now;
+          try {
+            localStorage.setItem(
+              KEY,
+              JSON.stringify({ idx, t: a.currentTime || 0, on: want, ts: now }),
+            );
+          } catch (e) {}
         };
 
         function load(i) {
@@ -6108,7 +6111,27 @@
           if (want) tryPlay();
         }
 
-        load(0);
+        {
+          // nhạc đang phát dở ở trang kia -> phát tiếp đúng bài, đúng đoạn
+          const sv = readState(),
+            age = sv ? Date.now() - sv.ts : Infinity;
+          if (sv && age < 30 * 60 * 1000) {
+            want = sv.on !== false;
+            const seek = (sv.t || 0) + (sv.on && age < 20000 ? age / 1000 : 0);
+            load(sv.idx | 0);
+            if (seek > 1)
+              a.addEventListener(
+                "loadedmetadata",
+                () => {
+                  try {
+                    if (!a.duration || seek < a.duration - 1)
+                      a.currentTime = seek;
+                  } catch (e) {}
+                },
+                { once: true },
+              );
+          } else load(0);
+        }
         sync();
 
         a.addEventListener("ended", next);
@@ -6117,6 +6140,11 @@
         });
         a.addEventListener("play", sync);
         a.addEventListener("pause", sync);
+        a.addEventListener("timeupdate", () => saveState());
+        ["play", "pause", "ended"].forEach((ev) =>
+          a.addEventListener(ev, () => saveState(true)),
+        );
+        window.addEventListener("pagehide", () => saveState(true));
 
         b.onclick = (e) => {
           e.stopPropagation();
@@ -6128,6 +6156,7 @@
             a.pause();
           }
           sync();
+          saveState(true);
         };
 
         const EVTS = ["click", "touchend", "keydown", "mousedown"];

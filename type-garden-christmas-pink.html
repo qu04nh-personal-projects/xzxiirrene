@@ -141,7 +141,7 @@
           }
         "
       >
-        ← Back
+        ←
       </button>
       <input
         id="in"
@@ -152,6 +152,116 @@
         spellcheck="false"
       />
     </div>
+    <audio id="bgm" preload="auto"></audio>
+    <script>
+      /* Nhạc nền cho trang này khi mở đứng riêng (không có nút).
+         Nếu đang nằm trong index (iframe) thì bỏ qua: index đã phát nhạc.
+         Bài / đoạn đang nghe dùng chung với index qua localStorage "wx_bgm". */
+      (function () {
+        const a = document.getElementById("bgm");
+        if (window.parent !== window) {
+          a.remove();
+          return;
+        }
+        const TRACKS = [
+            "./audio/bgm.mp3",
+            "./audio/bgm2.mp3",
+            "./audio/bgm3.mp3",
+          ],
+          KEY = "wx_bgm";
+        a.volume = 0.5;
+        let idx = 0,
+          fails = 0,
+          want = true,
+          unlocked = false,
+          lastSave = 0;
+
+        const readState = () => {
+          try {
+            return JSON.parse(localStorage.getItem(KEY)) || null;
+          } catch (e) {
+            return null;
+          }
+        };
+        const saveState = (force) => {
+          const now = Date.now();
+          if (!force && now - lastSave < 1000) return;
+          lastSave = now;
+          try {
+            localStorage.setItem(
+              KEY,
+              JSON.stringify({ idx, t: a.currentTime || 0, on: want, ts: now }),
+            );
+          } catch (e) {}
+        };
+        function load(i) {
+          idx = (i + TRACKS.length) % TRACKS.length;
+          a.src = TRACKS[idx];
+          a.load();
+        }
+        function tryPlay() {
+          if (!want) return;
+          const p = a.play();
+          if (p !== undefined)
+            p.then(() => {
+              fails = 0;
+              unlocked = true;
+              cleanup();
+            }).catch(() => {});
+        }
+        function next() {
+          load(idx + 1);
+          if (want) tryPlay();
+        }
+
+        const sv = readState(),
+          age = sv ? Date.now() - sv.ts : Infinity;
+        if (sv && age < 30 * 60 * 1000) {
+          want = sv.on !== false; // nếu bên index đã tắt nhạc thì ở đây cũng im
+          const seek = (sv.t || 0) + (sv.on && age < 20000 ? age / 1000 : 0);
+          load(sv.idx | 0);
+          if (seek > 1)
+            a.addEventListener(
+              "loadedmetadata",
+              () => {
+                try {
+                  if (!a.duration || seek < a.duration - 1)
+                    a.currentTime = seek;
+                } catch (e) {}
+              },
+              { once: true },
+            );
+        } else load(0);
+
+        a.addEventListener("ended", next);
+        a.addEventListener("error", () => {
+          if (++fails < TRACKS.length) next();
+        });
+        a.addEventListener("timeupdate", () => saveState());
+        ["play", "pause", "ended"].forEach((ev) =>
+          a.addEventListener(ev, () => saveState(true)),
+        );
+        window.addEventListener("pagehide", () => saveState(true));
+
+        // Trình duyệt chặn tự phát -> phát ở lần chạm / bấm phím đầu tiên
+        const EVTS = ["click", "touchend", "keydown", "mousedown"];
+        function onFirstInteract() {
+          if (!unlocked && want) tryPlay();
+        }
+        function cleanup() {
+          EVTS.forEach((ev) =>
+            window.removeEventListener(ev, onFirstInteract, { capture: true }),
+          );
+        }
+        EVTS.forEach((ev) =>
+          window.addEventListener(ev, onFirstInteract, {
+            capture: true,
+            passive: true,
+          }),
+        );
+        tryPlay();
+      })();
+    </script>
     <script>
       (() => {
         const START = "Irene 隋憶*•’•€"; // <- the text that grows on load
