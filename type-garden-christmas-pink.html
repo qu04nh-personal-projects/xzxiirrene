@@ -265,6 +265,26 @@
     <script>
       (() => {
         const START = "Irene 隋憶*•’•€"; // <- the text that grows on load
+        /* Nhớ chữ bạn đã gõ: thoát ra vào lại (hoặc tải lại trang) vẫn còn */
+        const TEXT_KEY = "wx_garden_text";
+        const savedText = () => {
+          try {
+            const t = localStorage.getItem(TEXT_KEY);
+            return t ? t.slice(0, 200) : null;
+          } catch (e) {
+            return null;
+          }
+        };
+        const persistText = () => {
+          try {
+            const t = letters
+              .filter((l) => !l.dead)
+              .map((l) => l.ch)
+              .join("");
+            if (t.trim()) localStorage.setItem(TEXT_KEY, t);
+            else localStorage.removeItem(TEXT_KEY); // xóa hết -> về chữ mặc định
+          } catch (e) {}
+        };
         const F = '"Playfair Display","Noto Serif TC",Georgia,serif';
         const PAL = [
           ["Blush", "#FAD4D8", "#C8102E", "#274690", "#FFE3E6", "#1A1A1A"],
@@ -1023,7 +1043,7 @@
           const A = letters.filter((l) => !l.dead),
             maxW = W * 0.8,
             S0 = H * 0.28,
-            LH = W < 600 ? 1.3 : 2.1, // điện thoại: các hàng chữ sát nhau hơn
+            LH = W < 600 ? 1.5 : 2.1, // điện thoại: các hàng chữ sát nhau hơn
             ws = A.map((l) => mw(l.ch));
           const words = [];
           let cur = [];
@@ -1162,6 +1182,7 @@
           lastKey = performance.now();
           kd = true;
           setTimeout(() => (kd = false), 0);
+          setTimeout(persistText, 0);
         };
         window.addEventListener("keydown", (e) => {
           if (e.metaKey || e.ctrlKey || e.altKey) return;
@@ -1205,6 +1226,7 @@
               layout();
             } else add(ch, now);
           }
+          persistText();
           inp.value = SENT;
         });
         const app = document.getElementById("app");
@@ -1394,7 +1416,7 @@
           cacheClear();
           layout(true);
           let i = 0;
-          const chars = [...START];
+          const chars = [...(savedText() || START)];
           (function next() {
             if (i < chars.length) {
               add(chars[i++], performance.now());
