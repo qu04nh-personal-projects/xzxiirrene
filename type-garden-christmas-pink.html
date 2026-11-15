@@ -265,26 +265,13 @@
     <script>
       (() => {
         const START = "Irene 隋憶*•’•€"; // <- the text that grows on load
-        /* Nhớ chữ bạn đã gõ: thoát ra vào lại (hoặc tải lại trang) vẫn còn */
+        /* Không lưu chữ: thoát ra vào lại (hoặc tải lại trang) là chạy lại từ đầu */
         const TEXT_KEY = "wx_garden_text";
-        const savedText = () => {
-          try {
-            const t = localStorage.getItem(TEXT_KEY);
-            return t ? t.slice(0, 200) : null;
-          } catch (e) {
-            return null;
-          }
-        };
-        const persistText = () => {
-          try {
-            const t = letters
-              .filter((l) => !l.dead)
-              .map((l) => l.ch)
-              .join("");
-            if (t.trim()) localStorage.setItem(TEXT_KEY, t);
-            else localStorage.removeItem(TEXT_KEY); // xóa hết -> về chữ mặc định
-          } catch (e) {}
-        };
+        try {
+          localStorage.removeItem(TEXT_KEY); // dọn chữ đã lưu từ các lần trước
+        } catch (e) {}
+        const savedText = () => null;
+        const persistText = () => {};
         const F = '"Playfair Display","Noto Serif TC",Georgia,serif';
         const PAL = [
           ["Blush", "#FAD4D8", "#C8102E", "#274690", "#FFE3E6", "#1A1A1A"],
