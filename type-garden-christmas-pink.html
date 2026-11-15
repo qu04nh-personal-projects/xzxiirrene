@@ -265,13 +265,10 @@
     <script>
       (() => {
         const START = "Irene 隋憶*•’•€"; // <- the text that grows on load
-        /* Không lưu chữ: thoát ra vào lại (hoặc tải lại trang) là chạy lại từ đầu */
-        const TEXT_KEY = "wx_garden_text";
+        /* Không cho gõ chữ, không lưu chữ: mỗi lần vào lại, dòng chữ bắt đầu từ đầu */
         try {
-          localStorage.removeItem(TEXT_KEY); // dọn chữ đã lưu từ các lần trước
+          localStorage.removeItem("wx_garden_text");
         } catch (e) {}
-        const savedText = () => null;
-        const persistText = () => {};
         const F = '"Playfair Display","Noto Serif TC",Georgia,serif';
         const PAL = [
           ["Blush", "#FAD4D8", "#C8102E", "#274690", "#FFE3E6", "#1A1A1A"],
@@ -1165,65 +1162,10 @@
           }
           layout();
         }
-        const mark = () => {
-          lastKey = performance.now();
-          kd = true;
-          setTimeout(() => (kd = false), 0);
-          setTimeout(persistText, 0);
-        };
-        window.addEventListener("keydown", (e) => {
-          if (e.metaKey || e.ctrlKey || e.altKey) return;
-          if (
-            e.target.tagName === "BUTTON" &&
-            (e.key === "Enter" || e.key === " ")
-          )
-            return;
-          const now = performance.now();
-          if (e.key === "Backspace") {
-            e.preventDefault();
-            mark();
-            wither(now);
-            return;
-          }
-          if (e.key === "Enter") {
-            e.preventDefault();
-            mark();
-            letters = [];
-            layout();
-            return;
-          }
-          if (e.key.length !== 1) return;
-          e.preventDefault();
-          mark();
-          add(e.key, now);
-        });
-        const SENT = "\u200b";
-        inp.value = SENT; // phone keyboards: mirror the hidden field
-        inp.addEventListener("input", () => {
-          if (kd) {
-            inp.value = SENT;
-            return;
-          }
-          const now = performance.now();
-          lastKey = now;
-          if (!inp.value.includes(SENT)) wither(now);
-          for (const ch of inp.value.replace(SENT, "")) {
-            if (ch === "\n") {
-              letters = [];
-              layout();
-            } else add(ch, now);
-          }
-          persistText();
-          inp.value = SENT;
-        });
-        const app = document.getElementById("app");
-        app.addEventListener("pointerdown", (e) => {
-          if (e.target.closest("button")) return;
-          if (e.pointerType === "mouse") inp.focus({ preventScroll: true });
-        });
-        app.addEventListener("click", (e) => {
-          if (e.target === cv) inp.focus({ preventScroll: true });
-        });
+        // Khóa ô nhập: không hiện bàn phím, không nhận chữ
+        inp.readOnly = true;
+        inp.tabIndex = -1;
+        inp.blur();
         window.addEventListener("pointermove", (e) => {
           mx = e.clientX;
           my = e.clientY;
@@ -1399,18 +1341,24 @@
         setPal();
         resize();
         frame();
+        let growToken = 0;
         const grew = () => {
+          const my = ++growToken;
           cacheClear();
+          letters = [];
           layout(true);
           let i = 0;
-          const chars = [...(savedText() || START)];
+          const chars = [...START];
           (function next() {
+            if (my !== growToken) return;
             if (i < chars.length) {
               add(chars[i++], performance.now());
               setTimeout(next, 90);
             }
           })();
         };
+        // Thoát ra vào lại: dòng chữ chạy lại từ đầu
+        const replay = () => grew();
         const cacheClear = () => {
           for (const k in cache) delete cache[k];
         };
@@ -1429,15 +1377,53 @@
               layout();
             }, 400);
           });
-        if (!matchMedia("(pointer: coarse)").matches)
-          setTimeout(() => inp.focus({ preventScroll: true }), 50);
-        // Khi được mở lại từ trang cha (iframe): focus lại để gõ chữ ngay
+        /* Bấm nút back -> xóa chữ ngay, đánh dấu "chờ chạy lại".
+           Khi trang hiện lại (index mở lại iframe) thì chữ mọc lại từ đầu.
+           Nhiều tín hiệu cùng bắt, vì mỗi cách index ẩn/hiện iframe khác nhau. */
+        let pending = false,
+          leftAt = 0;
+        const goBack = () => {
+          pending = true;
+          leftAt = performance.now();
+          growToken++; // dừng đợt mọc chữ đang chạy
+          letters = [];
+          layout(true);
+        };
+        const shown = () => {
+          if (!pending || performance.now() - leftAt < 300) return;
+          pending = false;
+          grew();
+        };
+        document
+          .getElementById("backBtn")
+          .addEventListener("click", goBack, true);
+        window.addEventListener("pageshow", (e) => {
+          if (e.persisted) replay();
+        });
+        // Index báo "mở lại" -> luôn chạy lại
         window.addEventListener("message", (e) => {
           if (e.data && e.data.type === "wx-garden-show") {
-            if (!matchMedia("(pointer: coarse)").matches)
-              inp.focus({ preventScroll: true });
+            pending = false;
+            replay();
           }
         });
+        // Iframe hiện lại: kích thước đổi từ 0 -> có, hoặc canvas lại nhìn thấy
+        if (window.ResizeObserver)
+          new ResizeObserver((es) => {
+            if (es[0].contentRect.width > 0) shown();
+          }).observe(document.getElementById("app"));
+        if (window.IntersectionObserver)
+          new IntersectionObserver((es) => {
+            if (es[es.length - 1].isIntersecting) shown();
+          }).observe(cv);
+        document.addEventListener("visibilitychange", () => {
+          if (!document.hidden) shown();
+        });
+        window.addEventListener("focus", shown);
+        // Dự phòng: chạm / bấm đầu tiên sau khi quay lại
+        ["pointerdown", "touchstart", "mousedown"].forEach((ev) =>
+          window.addEventListener(ev, shown, { passive: true }),
+        );
       })();
     </script>
   </body>
