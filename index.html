@@ -737,6 +737,64 @@
       .wx-top .wx-btn.wx-ghost {
         color: rgba(255, 255, 255, 0.75);
       }
+      /* Nút My Garden (góc dưới trái) + lớp phủ vườn chữ */
+      .wx-corner {
+        position: fixed;
+        left: calc(14px + env(safe-area-inset-left));
+        bottom: calc(14px + env(safe-area-inset-bottom));
+        z-index: 20;
+      }
+      .wx-corner .wx-btn {
+        display: inline-flex;
+        align-items: center;
+        height: 42px;
+        box-sizing: border-box;
+        text-decoration: none;
+        font-family: system-ui, sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+        padding: 0 18px;
+        border-radius: 999px;
+        color: #ffffff;
+        background: rgba(255, 255, 255, 0.14);
+        border: 1px solid rgba(255, 255, 255, 0.4);
+        backdrop-filter: blur(6px);
+        -webkit-backdrop-filter: blur(6px);
+        transition:
+          background 0.2s,
+          border-color 0.2s,
+          box-shadow 0.2s,
+          transform 0.1s;
+      }
+      .wx-corner .wx-btn:hover {
+        background: rgba(255, 255, 255, 0.26);
+        border-color: #ffffff;
+        box-shadow: 0 0 14px rgba(255, 255, 255, 0.3);
+      }
+      .wx-corner .wx-btn:active {
+        transform: scale(0.95);
+      }
+      .wx-garden-frame {
+        position: fixed;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        border: 0;
+        background: #fad4d8;
+        z-index: 9000; /* trên mọi lớp UI, dưới nút nhạc (9999) */
+        animation: wxGardenIn 0.35s ease;
+      }
+      .wx-garden-frame[hidden] {
+        display: none;
+      }
+      @keyframes wxGardenIn {
+        from {
+          opacity: 0;
+        }
+        to {
+          opacity: 1;
+        }
+      }
       .wx-layer {
         position: fixed;
         inset: 0;
@@ -1459,6 +1517,190 @@
         color: #ffffff;
       }
     </style>
+    <style>
+      /* ============ GLASS BUTTONS (đồng bộ toàn trang) ============ */
+      .wx-btn,
+      .wx-top .wx-btn,
+      .wx-corner .wx-btn,
+      .wx-cta,
+      .wx-link,
+      .wx-wiz-ico,
+      .wx-pg-btn,
+      .wx-anon {
+        color: #ffffff;
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.3),
+          rgba(255, 255, 255, 0.08)
+        );
+        border: 1px solid rgba(255, 255, 255, 0.45);
+        backdrop-filter: blur(14px) saturate(160%);
+        -webkit-backdrop-filter: blur(14px) saturate(160%);
+        box-shadow:
+          0 8px 24px rgba(0, 0, 0, 0.22),
+          inset 0 1px 0 rgba(255, 255, 255, 0.6),
+          inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+        transition:
+          background 0.2s,
+          border-color 0.2s,
+          box-shadow 0.2s,
+          transform 0.12s;
+      }
+      .wx-btn,
+      .wx-link {
+        border-radius: 999px;
+      }
+      .wx-btn:hover,
+      .wx-top .wx-btn:hover,
+      .wx-corner .wx-btn:hover,
+      .wx-cta:hover:not(:disabled),
+      .wx-link:hover,
+      .wx-wiz-ico:hover,
+      .wx-pg-btn:hover:not(:disabled),
+      .wx-anon:hover {
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.45),
+          rgba(255, 255, 255, 0.16)
+        );
+        border-color: #ffffff;
+        box-shadow:
+          0 10px 28px rgba(0, 0, 0, 0.28),
+          0 0 16px rgba(255, 255, 255, 0.28),
+          inset 0 1px 0 rgba(255, 255, 255, 0.8),
+          inset 0 -1px 0 rgba(255, 255, 255, 0.2);
+        transform: translateY(-1px);
+      }
+      .wx-btn:active,
+      .wx-top .wx-btn:active,
+      .wx-corner .wx-btn:active,
+      .wx-link:active,
+      .wx-wiz-ico:active,
+      .wx-anon:active,
+      .wx-cta:active:not(:disabled),
+      .wx-pg-btn:active:not(:disabled) {
+        transform: scale(0.95);
+      }
+      .wx-btn:focus-visible,
+      .wx-cta:focus-visible,
+      .wx-link:focus-visible,
+      .wx-wiz-ico:focus-visible,
+      .wx-pg-btn:focus-visible {
+        outline: 2px solid #e5c07b;
+        outline-offset: 2px;
+      }
+      .wx-cta:disabled,
+      .wx-pg-btn:disabled {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: rgba(255, 255, 255, 0.5);
+        box-shadow: none;
+        text-shadow: none;
+        transform: none;
+      }
+
+      /* nút chính (hồng) */
+      .wx-btn.wx-primary,
+      .wx-top .wx-btn.wx-primary {
+        background: linear-gradient(
+          135deg,
+          rgba(244, 114, 182, 0.65),
+          rgba(236, 72, 153, 0.28)
+        );
+        border-color: rgba(255, 255, 255, 0.75);
+        box-shadow:
+          0 8px 24px rgba(236, 72, 153, 0.3),
+          0 0 14px rgba(244, 114, 182, 0.45),
+          inset 0 1px 0 rgba(255, 255, 255, 0.6),
+          inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+      }
+      .wx-btn.wx-primary:hover,
+      .wx-top .wx-btn.wx-primary:hover {
+        background: linear-gradient(
+          135deg,
+          rgba(244, 114, 182, 0.85),
+          rgba(236, 72, 153, 0.45)
+        );
+      }
+
+      /* nút có ON/OFF -> cần gạt (giống Send anonymously) */
+      .wx-btn.wx-tgl {
+        display: inline-flex;
+        align-items: center;
+        gap: 10px;
+        font-family: system-ui, sans-serif;
+        font-size: 13px;
+        font-weight: 600;
+      }
+      .wx-top .wx-btn.wx-tgl {
+        padding: 6px 10px 6px 16px;
+      }
+      .wx-tgl.on .wx-sw {
+        background: #c9444b;
+      }
+      .wx-tgl.on .wx-sw::after {
+        transform: translateX(16px);
+      }
+      .wx-anon:has(input:checked),
+      .wx-btn.wx-tgl.on,
+      .wx-top .wx-btn.wx-tgl.on {
+        background: linear-gradient(
+          135deg,
+          rgba(201, 68, 75, 0.6),
+          rgba(201, 68, 75, 0.22)
+        );
+        border-color: #ffffff;
+        box-shadow:
+          0 8px 24px rgba(201, 68, 75, 0.28),
+          0 0 14px rgba(255, 255, 255, 0.3),
+          inset 0 1px 0 rgba(255, 255, 255, 0.6),
+          inset 0 -1px 0 rgba(255, 255, 255, 0.12);
+      }
+      .wx-btn.wx-tgl.on:hover,
+      .wx-top .wx-btn.wx-tgl.on:hover {
+        background: linear-gradient(
+          135deg,
+          rgba(201, 68, 75, 0.8),
+          rgba(201, 68, 75, 0.36)
+        );
+      }
+
+      /* nút nhạc: góc dưới phải, luôn nằm trên lớp vườn chữ */
+      .wx-music {
+        position: fixed;
+        right: calc(14px + env(safe-area-inset-right));
+        bottom: calc(14px + env(safe-area-inset-bottom));
+        z-index: 9999;
+        height: 42px;
+        padding: 0 10px 0 16px;
+        box-sizing: border-box;
+        cursor: pointer;
+      }
+      /* trong vườn (nền hồng sáng): chữ đỏ như nút Back */
+      .wx-in-garden .wx-music {
+        color: #c8102e;
+        text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+        background: linear-gradient(
+          135deg,
+          rgba(255, 255, 255, 0.6),
+          rgba(255, 255, 255, 0.18)
+        );
+        box-shadow:
+          0 8px 24px rgba(200, 16, 46, 0.16),
+          inset 0 1px 0 rgba(255, 255, 255, 0.9),
+          inset 0 -1px 0 rgba(255, 255, 255, 0.25);
+      }
+      .wx-in-garden .wx-music.on {
+        color: #ffffff;
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+        background: linear-gradient(
+          135deg,
+          rgba(200, 16, 46, 0.85),
+          rgba(200, 16, 46, 0.55)
+        );
+      }
+    </style>
   </head>
   <body class="text-slate-200 antialiased">
     <canvas id="asciiCanvas"></canvas>
@@ -1466,10 +1708,36 @@
     <div class="wx-title" id="wxTitle"></div>
     <div class="wx-ui wx-top">
       <button class="wx-btn wx-primary" id="wxOpen">✉️ Leave a Wish</button>
-      <button class="wx-btn" id="wxToggle">✉️ Letters: ON</button>
-      <button class="wx-btn" id="btnSnow">❄️ Snow: ON</button>
+      <button
+        class="wx-btn wx-tgl on"
+        id="wxToggle"
+        role="switch"
+        aria-checked="true"
+      >
+        <span>✉️ Letters</span><span class="wx-sw"></span>
+      </button>
+      <button
+        class="wx-btn wx-tgl on"
+        id="btnSnow"
+        role="switch"
+        aria-checked="true"
+      >
+        <span>❄️ Snow</span><span class="wx-sw"></span>
+      </button>
       <button class="wx-btn wx-ghost" id="wxAdminBtn" hidden>🔒 Admin</button>
     </div>
+
+    <div class="wx-ui wx-corner">
+      <a class="wx-btn" id="wxGarden" href="./type-garden-christmas-pink.html"
+        >🎄My Garden🌿</a
+      >
+    </div>
+    <iframe
+      id="wxGardenFrame"
+      class="wx-garden-frame"
+      title="My Garden"
+      hidden
+    ></iframe>
 
     <div class="wx-wiz wx-ui" id="wxWiz" hidden>
       <div class="wx-wiz-head">
@@ -3198,8 +3466,8 @@
         const btnSnow = document.getElementById("btnSnow");
         btnSnow.onclick = () => {
           snowEnabled = !snowEnabled;
-          btnSnow.textContent = snowEnabled ? "❄ Snow: ON" : "✧ Snow: OFF";
-          btnSnow.className = snowEnabled ? "wx-btn" : "wx-btn wx-off";
+          btnSnow.classList.toggle("on", snowEnabled);
+          btnSnow.setAttribute("aria-checked", String(snowEnabled));
         };
 
         const zoomSlider = document.getElementById("zoomSlider");
@@ -3311,6 +3579,11 @@
         };
 
         function frame(timestamp) {
+          if (window.__wxPaused) {
+            lastTimestamp = timestamp;
+            requestAnimationFrame(frame);
+            return;
+          }
           if (maxFps > 0 && timestamp - lastTimestamp < 1000 / maxFps - 1) {
             requestAnimationFrame(frame); // too early: skip this frame
             return;
@@ -5343,10 +5616,8 @@
 
         $("wxToggle").onclick = () => {
           showLetters = !showLetters;
-          $("wxToggle").textContent = showLetters
-            ? "✉ Letters: ON"
-            : "✧ Letters: OFF";
-          $("wxToggle").className = showLetters ? "wx-btn" : "wx-btn wx-off";
+          $("wxToggle").classList.toggle("on", showLetters);
+          $("wxToggle").setAttribute("aria-checked", String(showLetters));
           if (!showLetters) {
             layer.innerHTML = "";
             active = 0;
@@ -5697,23 +5968,12 @@
     <audio id="bgm" preload="auto"></audio>
     <button
       id="bgmBtn"
+      class="wx-btn wx-tgl wx-music"
+      role="switch"
+      aria-checked="false"
       aria-label="Music"
-      style="
-        position: fixed;
-        right: 14px;
-        bottom: 14px;
-        z-index: 9999;
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
-        border: 0;
-        cursor: pointer;
-        background: rgba(0, 0, 0, 0.45);
-        color: #fff;
-        font-size: 18px;
-      "
     >
-      🔇
+      <span>🎵 Music</span><span class="wx-sw"></span>
     </button>
     <script>
       (function () {
@@ -5732,7 +5992,9 @@
           unlocked = false;
 
         const sync = () => {
-          b.textContent = a.paused ? "🔇" : "🔊";
+          const on = !a.paused;
+          b.classList.toggle("on", on);
+          b.setAttribute("aria-checked", String(on));
         };
 
         function load(i) {
@@ -5764,6 +6026,7 @@
         }
 
         load(0);
+        sync();
 
         a.addEventListener("ended", next);
         a.addEventListener("error", () => {
@@ -5787,7 +6050,7 @@
         const EVTS = ["click", "touchend", "keydown", "mousedown"];
 
         function onFirstInteract(e) {
-          if (e.target === b) return;
+          if (b.contains(e.target)) return;
           if (!unlocked && want) {
             tryPlay();
           }
@@ -5807,6 +6070,65 @@
         );
 
         tryPlay();
+      })();
+    </script>
+    <script>
+      /* My Garden: mở vườn chữ ngay trong trang này (iframe) để nhạc nền
+         (#bgm) không bị ngắt khi chuyển qua lại. */
+      (function () {
+        const link = document.getElementById("wxGarden");
+        const frame = document.getElementById("wxGardenFrame");
+        if (!link || !frame) return;
+        const URL_GARDEN = link.getAttribute("href");
+        let loaded = false;
+        let open = false;
+
+        function openGarden() {
+          if (open) return;
+          open = true;
+          if (!loaded) {
+            frame.src = URL_GARDEN; // chỉ tải lần đầu bấm
+            loaded = true;
+          }
+          frame.hidden = false;
+          window.__wxPaused = true;
+          document.body.classList.add("wx-in-garden");
+          history.pushState({ wxGarden: 1 }, "");
+          try {
+            frame.contentWindow.focus();
+            frame.contentWindow.postMessage({ type: "wx-garden-show" }, "*");
+          } catch (e) {}
+        }
+
+        function closeGarden() {
+          if (!open) return;
+          open = false;
+          frame.hidden = true;
+          window.__wxPaused = false;
+          document.body.classList.remove("wx-in-garden");
+          window.focus();
+        }
+
+        link.addEventListener("click", (e) => {
+          // Ctrl/Cmd/Shift-click hoặc chuột giữa: vẫn mở tab mới như link thường
+          if (e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+          e.preventDefault();
+          openGarden();
+        });
+
+        // Nút ← Back trong vườn
+        window.addEventListener("message", (e) => {
+          if (e.source !== frame.contentWindow) return;
+          if (e.data && e.data.type === "wx-garden-back") {
+            if (history.state && history.state.wxGarden) history.back();
+            else closeGarden();
+          }
+        });
+
+        // Nút Back của trình duyệt / điện thoại cũng chỉ đóng vườn
+        window.addEventListener("popstate", () => {
+          if (open) closeGarden();
+        });
       })();
     </script>
   </body>
